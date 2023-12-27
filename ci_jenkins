@@ -28,7 +28,7 @@ pipeline {
         stage('Test Response') {
             steps {
                 script {
-                    def httpResponse = sh(returnStdout: true, script: 'curl -s -o /dev/null -w "%{http_code}" http://localhost:9889/')
+                    def httpResponse = sh(returnStdout: true, script: 'curl -s -o /dev/null -w "%{http_code}" http://localhost:9889/index.html')
                     if (httpResponse.trim() != '200') {
                         error 'HTTP response code is not 200'
                     }
