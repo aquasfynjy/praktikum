@@ -57,9 +57,6 @@ pipeline {
         
         success {
             echo 'CI passed successfully!'
-            mail to: "emelyanov.aa.ita@yandex.ru",
-            subject: "Build SUCCESS ${JOB_NAME}",
-            body: "Build SUCCESS in Jenkins ${BUILD_URL} "
         }
         
         failure {
