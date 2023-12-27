@@ -1,0 +1,69 @@
+pipeline {
+    agent any
+    
+    options {
+        buildDiscarder(logRotator(numToKeepStr: '5', artifactNumToKeepStr: '5'))
+    }
+    
+    triggers { pollSCM('* * * * *')}
+
+    
+    stages {
+        stage('Docker run') {
+            steps {
+                sh 'docker run -d -p 9889:80 --name ci_runner nginx:stable'
+            }
+        }
+        
+        stage('Docker cp index') {
+            steps {
+                script {        
+                    sh 'docker cp /var/lib/jenkins/workspace/praktikum/index.html ci_runner:/usr/share/nginx/html/index.html'
+
+                   
+            }
+        } 
+    }
+
+        stage('Test Response') {
+            steps {
+                script {
+                    def httpResponse = sh(returnStdout: true, script: 'curl -s -o /dev/null -w "%{http_code}" http://localhost:9889/')
+                    if (httpResponse.trim() != '200') {
+                        error 'HTTP response code is not 200'
+                    }
+                }  
+            }
+        }
+        
+       
+        stage('Test md5sum') {
+            steps {
+                script {
+                    def localMd5 = sh(returnStdout: true, script: 'md5sum /var/lib/jenkins/workspace/praktikum/index.html | awk "{print $1}"')
+                    def remoteMd5 = sh(returnStdout: true, script: 'curl -s http://10.0.0.6:9889/index.html | md5sum | awk "{print $1}"')
+                    if (localMd5.trim() != remoteMd5.trim()) {
+                        error 'MD5 sums do not match'
+                    }
+                }
+            }
+        }
+    } 
+      
+    post {
+        always {
+            sh 'docker rm -f nginx-container'
+        }
+        
+        success {
+            echo 'CI passed successfully!'
+        }
+        
+        failure {
+            echo 'CI failed!'
+            mail to: "emelyanov.aa.ita@gmail.com",
+            subject: "Build failed ${JOB_NAME}",
+            body: "Build failed in Jenkins ${BUILD_URL} " 
+        }
+    }
+}
