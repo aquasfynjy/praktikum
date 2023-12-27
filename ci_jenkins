@@ -40,8 +40,8 @@ pipeline {
         stage('Test md5sum') {
             steps {
                 script {
-                    def localMd5 = sh(returnStdout: true, script: "md5sum /var/lib/jenkins/workspace/praktikum/index.html | awk '{print $1}'")
-                    def remoteMd5 = sh(returnStdout: true, script: "curl -s http://10.0.0.6:9889/index.html | md5sum | awk '{print $1}'")
+                    def localMd5 = sh(returnStdout: true, script: '''md5sum /var/lib/jenkins/workspace/praktikum/index.html | awk '{print $1}'''')
+                    def remoteMd5 = sh(returnStdout: true, script: '''curl -s http://10.0.0.6:9889/index.html | md5sum | awk '{print $1}'''')
                     if (localMd5.trim() != remoteMd5.trim()) {
                         error 'MD5 sums do not match'
                     }
